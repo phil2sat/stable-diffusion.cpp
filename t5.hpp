@@ -717,7 +717,7 @@ struct T5Params {
     int64_t model_dim       = 4096;
     int64_t ff_dim          = 10240;
     int64_t num_heads       = 64;
-    int64_t vocab_size      = 32128;
+    int64_t vocab_size      = 69328;
     bool relative_attention = true;
 };
 

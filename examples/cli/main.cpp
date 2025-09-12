@@ -246,7 +246,7 @@ void print_usage(int argc, const char* argv[]) {
     printf("  --skip-layers LAYERS               Layers to skip for SLG steps: (default: [7,8,9])\n");
     printf("  --skip-layer-start START           SLG enabling point: (default: 0.01)\n");
     printf("  --skip-layer-end END               SLG disabling point: (default: 0.2)\n");
-    printf("  --scheduler {discrete, karras, exponential, ays, gits, smoothstep, sgm_uniform, simple} Denoiser sigma scheduler (default: discrete)\n");
+    printf("  --scheduler {discrete, karras, exponential, ays, gits, smoothstep, beta, bezier, sgm_uniform, simple} Denoiser sigma scheduler (default: discrete)\n");
     printf("  --sampling-method {euler, euler_a, heun, dpm2, dpm++2s_a, dpm++2m, dpm++2mv2, ipndm, ipndm_v, lcm, ddim_trailing, tcd}\n");
     printf("                                     sampling method (default: \"euler\" for Flux/SD3/Wan, \"euler_a\" otherwise)\n");
     printf("  --timestep-shift N                 shift timestep for NitroFusion models, default: 0, recommended N for NitroSD-Realism around 250 and 500 for NitroSD-Vibrant\n");
@@ -260,7 +260,7 @@ void print_usage(int argc, const char* argv[]) {
     printf("  --high-noise-skip-layers LAYERS    (high noise) Layers to skip for SLG steps: (default: [7,8,9])\n");
     printf("  --high-noise-skip-layer-start      (high noise) SLG enabling point: (default: 0.01)\n");
     printf("  --high-noise-skip-layer-end END    (high noise) SLG disabling point: (default: 0.2)\n");
-    printf("  --high-noise-scheduler {discrete, karras, exponential, ays, gits, smoothstep, sgm_uniform, simple} Denoiser sigma scheduler (default: discrete)\n");
+    printf("  --high-noise-scheduler {discrete, karras, exponential, ays, gits, smoothstep, beta, bezier, sgm_uniform, simple} Denoiser sigma scheduler (default: discrete)\n");
     printf("  --high-noise-sampling-method {euler, euler_a, heun, dpm2, dpm++2s_a, dpm++2m, dpm++2mv2, ipndm, ipndm_v, lcm, ddim_trailing, tcd}\n");
     printf("                                     (high noise) sampling method (default: \"euler_a\")\n");
     printf("  --high-noise-steps  STEPS          (high noise) number of sample steps (default: -1 = auto)\n");

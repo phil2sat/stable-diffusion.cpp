@@ -757,13 +757,20 @@ public:
                 denoiser->scheduler->version = version;
                 break;
             case SIMPLE:
-                LOG_INFO("Running with Simple schedule");
-                denoiser->scheduler          = std::make_shared<SimpleSchedule>();
-                denoiser->scheduler->version = version;
+                LOG_INFO("running with Simple scheduler");
+                denoiser->scheduler = std::make_shared<SimpleSchedule>();
+                break;
+            case BETA:
+                LOG_INFO("running with Beta scheduler");
+                denoiser->scheduler = std::make_shared<BetaSchedule>();
                 break;
             case SMOOTHSTEP:
-                LOG_INFO("Running with SmoothStep scheduler");
+                LOG_INFO("running with SmoothStep scheduler");
                 denoiser->scheduler = std::make_shared<SmoothStepSchedule>();
+                break;
+            case BEZIER:
+                LOG_INFO("running with Bezier scheduler");
+                denoiser->scheduler = std::make_shared<BezierSchedule>();
                 break;
             case DEFAULT:
                 // Don't touch anything.
@@ -1628,12 +1635,14 @@ const char* schedule_to_str[] = {
     "default",
     "discrete",
     "karras",
+    "beta",
+    "smoothstep",
+    "bezier",
     "exponential",
     "ays",
     "gits",
     "sgm_uniform",
     "simple",
-    "smoothstep",
 };
 
 const char* sd_schedule_name(enum scheduler_t scheduler) {

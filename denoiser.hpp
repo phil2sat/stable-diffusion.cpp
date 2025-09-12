@@ -299,6 +299,118 @@ struct SimpleSchedule : SigmaSchedule {
     }
 };
 
+struct BetaSchedule : SigmaSchedule {
+    static constexpr double alpha = 0.6;
+    static constexpr double beta  = 0.6;
+
+    // Log Beta function
+    static double log_beta(double a, double b) {
+        return std::lgamma(a) + std::lgamma(b) - std::lgamma(a + b);
+    }
+
+    // Regularized incomplete beta function using continued fraction
+    static double incbeta(double x, double a, double b) {
+        if (x <= 0.0) return 0.0;
+        if (x >= 1.0) return 1.0;
+
+        // Use the continued fraction approximation (Lentz’s method)
+        const int MAX_ITER = 200;
+        const double EPSILON = 3.0e-7;
+
+        double aa, c, d, del, h;
+        double qab = a + b;
+        double qap = a + 1.0;
+        double qam = a - 1.0;
+
+        c = 1.0;
+        d = 1.0 - qab * x / qap;
+        if (std::fabs(d) < 1e-30) d = 1e-30;
+        d = 1.0 / d;
+        h = d;
+
+        for (int m = 1; m <= MAX_ITER; m++) {
+            int m2 = 2 * m;
+
+            // Even term
+            aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+            d = 1.0 + aa * d;
+            if (std::fabs(d) < 1e-30) d = 1e-30;
+            c = 1.0 + aa / c;
+            if (std::fabs(c) < 1e-30) c = 1e-30;
+            d = 1.0 / d;
+            h *= d * c;
+
+            // Odd term
+            aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+            d = 1.0 + aa * d;
+            if (std::fabs(d) < 1e-30) d = 1e-30;
+            c = 1.0 + aa / c;
+            if (std::fabs(c) < 1e-30) c = 1e-30;
+            d = 1.0 / d;
+            del = d * c;
+            h *= del;
+
+            if (std::fabs(del - 1.0) < EPSILON) break;
+        }
+
+        return std::exp(a * std::log(x) + b * std::log(1.0 - x) - log_beta(a, b)) / a * h;
+    }
+
+    // Beta CDF using symmetry for better convergence
+    static double beta_cdf(double x, double a, double b) {
+        if (x == 0.0) return 0.0;
+        if (x == 1.0) return 1.0;
+        if (x < (a + 1.0) / (a + b + 2.0)) {
+            return incbeta(x, a, b);
+        } else {
+            return 1.0 - incbeta(1.0 - x, b, a);
+        }
+    }
+
+    // Inverse Beta CDF (PPF) using Newton-Raphson
+    static double beta_ppf(double u, double a, double b, int max_iter = 30) {
+        double x = 0.5; // initial guess
+        for (int i = 0; i < max_iter; i++) {
+            double f = beta_cdf(x, a, b) - u;
+            if (std::fabs(f) < 1e-10) break;
+            // derivative = x^(a-1) * (1-x)^(b-1) / B(a,b)
+            double df = std::exp((a-1.0)*std::log(x) + (b-1.0)*std::log(1.0-x) - log_beta(a,b));
+            x -= f / df;
+            if (x <= 0.0) x = 1e-10;
+            if (x >= 1.0) x = 1.0 - 1e-10;
+        }
+        return x;
+    }
+
+    std::vector<float> get_sigmas(uint32_t n, float /*sigma_min*/, float /*sigma_max*/, t_to_sigma_t t_to_sigma) override {
+        std::vector<float> result;
+        result.reserve(n + 1);
+
+        int t_max = TIMESTEPS - 1;
+        if (n == 0) return result;
+        if (n == 1) {
+            result.push_back(t_to_sigma((float)t_max));
+            result.push_back(0.f);
+            return result;
+        }
+
+        int last_t = -1;
+        for (uint32_t i = 0; i < n; i++) {
+            double u = 1.0 - double(i)/double(n);  // reversed linspace
+            double t_cont = beta_ppf(u, alpha, beta) * t_max;
+            int t = (int)std::lround(t_cont);
+
+            if (t != last_t) {
+                result.push_back(t_to_sigma((float)t));
+                last_t = t;
+            }
+        }
+
+        result.push_back(0.f);
+        return result;
+    }
+};
+
 // Close to Beta Schedule, but increadably simple in code.
 struct SmoothStepSchedule : SigmaSchedule {
     static constexpr float smoothstep(float x) {
@@ -323,6 +435,56 @@ struct SmoothStepSchedule : SigmaSchedule {
             result.push_back(t_to_sigma(std::round(smoothstep(u) * t_max)));
         }
 
+        result.push_back(0.f);
+        return result;
+    }
+};
+
+struct BezierSchedule : SigmaSchedule {
+    // Inverse Quadratic Bézier from Don Lancaster
+    static float quadraticBezier(float x, float a, float b) {
+        const float epsilon = 0.00001f;
+        a = std::clamp(a, 0.0f, 1.0f);
+        b = std::clamp(b, 0.0f, 1.0f);
+        if (a == 0.5f) a += epsilon;
+
+        // Solve t from x (inverse quadratic Bézier)
+        float om2a = 1.0f - 2.0f * a;
+        float t = (std::sqrt(a*a + om2a*x) - a) / om2a;
+        float y = (1.0f - 2.0f * b) * (t*t) + 2.0f * b * t;
+        return y;
+    }
+
+    std::vector<float> get_sigmas(uint32_t n, float /*sigma_min*/, float /*sigma_max*/, t_to_sigma_t t_to_sigma) override {
+        std::vector<float> result;
+        result.reserve(n + 1);
+
+        const int t_max = TIMESTEPS - 1;
+        if (n == 0) {
+            // Handle zero-step case: push max sigma and 0
+            result.push_back(t_to_sigma(static_cast<float>(t_max)));
+            result.push_back(0.f);
+            return result;
+        }
+
+        // Parameters for a Flux-Chroma-like distribution.
+        // These values were tuned experimentally to match the desired 8-step curve
+        const float a = 0.38f; // Quadratic Bézier X control point
+        const float b = 0.96f; // Quadratic Bézier Y control point
+
+        for (uint32_t i = 0; i < n; i++) {
+            // Uniform parameter in [0,1] for all steps
+            float u = static_cast<float>(i) / static_cast<float>(n - 1);
+
+            // Compute the inverted quadratic Bézier value and scale to timestep
+            float t_cont = (1.0f - quadraticBezier(u, a, b)) * t_max;
+
+            int t = static_cast<int>(std::lround(t_cont));
+
+            result.push_back(t_to_sigma(static_cast<float>(t)));
+        }
+
+        // Ensure the last sigma value is zero (final step)
         result.push_back(0.f);
         return result;
     }
