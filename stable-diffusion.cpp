@@ -744,6 +744,22 @@ public:
                 denoiser->scheduler          = std::make_shared<GITSSchedule>();
                 denoiser->scheduler->version = version;
                 break;
+            case SIMPLE:
+                LOG_INFO("running with Simple scheduler");
+                denoiser->scheduler = std::make_shared<SimpleSchedule>();
+                break;
+            case BETA:
+                LOG_INFO("running with Beta scheduler");
+                denoiser->scheduler = std::make_shared<BetaSchedule>();
+                break;
+            case SMOOTHSTEP:
+                LOG_INFO("running with SmoothStep scheduler");
+                denoiser->scheduler = std::make_shared<SmoothStepSchedule>();
+                break;
+            case BEZIER:
+                LOG_INFO("running with Bezier scheduler");
+                denoiser->scheduler = std::make_shared<BezierSchedule>();
+                break;
             case DEFAULT:
                 // Don't touch anything.
                 break;
@@ -1524,6 +1540,10 @@ const char* schedule_to_str[] = {
     "default",
     "discrete",
     "karras",
+    "simple",
+    "beta",
+    "smoothstep",
+    "bezier",
     "exponential",
     "ays",
     "gits",
