@@ -1,0 +1,19 @@
+#!/bin/bash
+rm -rf build
+mkdir build && cd build
+#cmake .. -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSD_HIPBLAS=ON -DCMAKE_BUILD_TYPE=Release -DAMDGPU_TARGETS=gfx900 -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} -march=native -mtune=native -O3" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -march=native -mtune=native -O3" -DGPU_TARGETS=gfx900 -DGGML_CUDA_FORCE_CUBLAS=ON -DGGML_NATIVE=ON 
+
+cmake .. -G "Ninja" \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DSD_HIPBLAS=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DAMDGPU_TARGETS=gfx900 \
+    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+    -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} -march=native -mtune=native -O3 -ffast-math -fno-finite-math-only -mavx2 -mfma" \
+    -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -march=native -mtune=native -O3 -ffast-math -fno-finite-math-only -mavx2 -mfma" \
+    -DGPU_TARGETS=gfx900 \
+    -DGGML_CUDA_FORCE_CUBLAS=ON \
+
+
+cmake --build . --config Release
