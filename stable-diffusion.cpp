@@ -730,15 +730,15 @@ public:
     void init_scheduler(scheduler_t scheduler) {
         switch (scheduler) {
             case DISCRETE:
-                LOG_INFO("running with discrete scheduler");
+                LOG_INFO("Running with discrete scheduler");
                 denoiser->scheduler = std::make_shared<DiscreteSchedule>();
                 break;
             case KARRAS:
-                LOG_INFO("running with Karras scheduler");
+                LOG_INFO("Running with Karras scheduler");
                 denoiser->scheduler = std::make_shared<KarrasSchedule>();
                 break;
             case EXPONENTIAL:
-                LOG_INFO("running exponential scheduler");
+                LOG_INFO("Running with exponential scheduler");
                 denoiser->scheduler = std::make_shared<ExponentialSchedule>();
                 break;
             case AYS:
@@ -757,19 +757,19 @@ public:
                 denoiser->scheduler->version = version;
                 break;
             case SIMPLE:
-                LOG_INFO("running with Simple scheduler");
+                LOG_INFO("Running with Simple scheduler");
                 denoiser->scheduler = std::make_shared<SimpleSchedule>();
                 break;
             case BETA:
-                LOG_INFO("running with Beta scheduler");
+                LOG_INFO("Running with Beta scheduler");
                 denoiser->scheduler = std::make_shared<BetaSchedule>();
                 break;
             case SMOOTHSTEP:
-                LOG_INFO("running with SmoothStep scheduler");
+                LOG_INFO("Running with SmoothStep scheduler");
                 denoiser->scheduler = std::make_shared<SmoothStepSchedule>();
                 break;
             case BEZIER:
-                LOG_INFO("running with Bezier scheduler");
+                LOG_INFO("Running with Bezier scheduler");
                 denoiser->scheduler = std::make_shared<BezierSchedule>();
                 break;
             case DEFAULT:
